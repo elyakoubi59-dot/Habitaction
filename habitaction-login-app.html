@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HABIT'ACTION — Plateforme Partagée</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1F3864;--blue:#2E5594;--lb:#EAF0F8;--elb:#D6E4F0;
+  --green:#059669;--lg:#D1FAE5;--orange:#D97706;--lo:#FEF3C7;
+  --red:#DC2626;--lr:#FEE2E2;--purple:#7C3AED;--lp:#EDE9FE;
+  --teal:#0E7490;--lt:#CFFAFE;
+  --g50:#F9FAFB;--g100:#F3F4F6;--g200:#E5E7EB;--g300:#D1D5DB;
+  --g400:#9CA3AF;--g500:#6B7280;--g700:#374151;--g900:#111827;
+  --white:#fff;
+  --sh:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);
+  --shl:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+  --shxl:0 20px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.04);
+}
+body{font-family:'Inter',sans-serif;background:var(--g50);min-height:100vh;color:var(--g900)}
+
+/* LOGIN SCREEN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1F3864,#2E5594);padding:20px}
+#loginScreen.hidden{display:none}
+.loginContainer{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:420px;box-shadow:var(--shxl)}
+.loginHeader{display:flex;align-items:center;gap:12px;margin-bottom:30px}
+.loginIcon{width:50px;height:50px;border-radius:12px;background:linear-gradient(135deg,#1F3864,#2E5594);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff}
+.loginTitle{font-size:22px;font-weight:800;color:var(--navy)}.loginSubtitle{font-size:12px;color:var(--g400);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.formGroup{margin-bottom:16px}
+.formGroup label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--navy);margin-bottom:6px}
+.formGroup input{width:100%;padding:11px 14px;border:1.5px solid var(--g200);border-radius:9px;font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.formGroup input:focus{border-color:#2E5594;box-shadow:0 0 0 3px rgba(46,85,148,.1)}
+.loginBtn{width:100%;padding:12px;background:linear-gradient(135deg,#1F3864,#2E5594);color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px;transition:opacity .2s}
+.loginBtn:hover{opacity:.9}
+.toggleForm{margin-top:18px;text-align:center;font-size:13px;color:var(--g500)}
+.toggleForm button{background:none;border:none;color:var(--navy);font-weight:700;cursor:pointer;text-decoration:underline}
+.errorMsg{background:var(--lr);color:var(--red);border-radius:8px;padding:11px 14px;margin-bottom:16px;font-size:13px;border-left:4px solid var(--red);display:none}
+.errorMsg.show{display:block}
+.successMsg{background:var(--lg);color:var(--green);border-radius:8px;padding:11px 14px;margin-bottom:16px;font-size:13px;border-left:4px solid var(--green);display:none}
+.successMsg.show{display:block}
+#signupForm{display:none}
+
+/* APP SCREEN */
+#appScreen{display:none}
+#appScreen.visible{display:flex;flex-direction:column;min-height:100vh}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:linear-gradient(135deg,#1F3864,#2E5594);z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;display:none}
+#loading.show{display:flex}
+.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#1F3864,#2E5594);padding:0 24px;position:sticky;top:0;z-index:200;box-shadow:var(--shl)}
+.hi{display:flex;align-items:center;justify-content:space-between;padding:13px 0 0}
+.logo{display:flex;align-items:center;gap:10px}
+.li2{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:17px}
+.userInfo{display:flex;align-items:center;gap:12px}
+.userName{color:#fff;font-size:12px;font-weight:700}
+.logoutBtn{background:rgba(255,255,255,.15);border:none;border-radius:8px;padding:6px 12px;color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+.logoutBtn:hover{background:rgba(255,255,255,.25)}
+.tabs{display:flex;gap:3px;padding:9px 0;overflow-x:auto}
+.tb{padding:7px 13px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-size:12px;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap}
+.tb.on{background:#fff;color:#1F3864;box-shadow:var(--sh)}
+.tb:not(.on){background:transparent;color:rgba(255,255,255,.7)}
+.tb:not(.on):hover{background:rgba(255,255,255,.1);color:#fff}
+
+/* MAIN */
+main{padding:20px 24px;max-width:1200px;margin:0 auto;flex:1;width:100%}
+.page{display:none}.page.on{display:block}
+
+/* COMPONENTS */
+.card{background:#fff;border-radius:14px;box-shadow:var(--sh);overflow:hidden}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:11px;margin-bottom:20px}
+.kpi{border-radius:13px;padding:15px;cursor:default;transition:transform .2s}.kpi:hover{transform:translateY(-2px)}
+.kpi-n{font-size:24px;font-weight:800;line-height:1;margin:6px 0 3px}
+.kpi-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;opacity:.7}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.fb{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.sb2{position:relative;flex:1;min-width:170px}
+.sb2 input{width:100%;padding:8px 13px 8px 32px;border:1.5px solid var(--g200);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.sb2 input:focus{border-color:#2E5594}
+.si2{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--g300)}
+.chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--g200);cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;background:#fff;color:var(--g500);transition:all .15s}
+.chip.on{background:#1F3864;color:#fff;border-color:#1F3864}
+.chip.rp.on{background:var(--purple);border-color:var(--purple)}
+.tw{border-radius:12px;overflow-x:auto;overflow-y:hidden;border:1px solid var(--g200);-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:linear-gradient(135deg,#1F3864,#2E5594)}
+th{padding:10px 12px;color:#fff;font-size:11px;font-weight:600;text-align:left;white-space:nowrap;letter-spacing:.3px}
+tbody tr:hover{background:var(--g50)}
+tbody tr:nth-child(even){background:#FAFBFF}
+td{padding:10px 12px;border-bottom:1px solid var(--g100);vertical-align:middle}
+.tn{font-weight:600;color:var(--g900)}.ts{font-size:11px;color:var(--g400);margin-top:2px}
+.ab{display:flex;gap:6px;flex-wrap:wrap}
+.ab button{padding:6px 10px;border-radius:7px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;transition:all .15s;white-space:nowrap;font-weight:600}
+.e2{background:var(--lb);color:#2E5594}.e2:hover{background:#2E5594;color:#fff}
+.d2{background:var(--lr);color:var(--red)}.d2:hover{background:var(--red);color:#fff}
+.p2{background:var(--lt);color:var(--teal)}.p2:hover{background:var(--teal);color:#fff}
+.bg2{background:var(--lb);color:#2E5594;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:12px;cursor:pointer}
+.bg2:hover{background:#2E5594;color:#fff}
+.bd{background:var(--lr);color:var(--red);border:none;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:12px;cursor:pointer}
+.bd:hover{background:var(--red);color:#fff}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+.pt{font-size:18px;font-weight:800;color:var(--g900)}.ps2{font-size:12px;color:var(--g400);margin-top:3px}
+.bp{padding:9px 16px;background:linear-gradient(135deg,#1F3864,#2E5594);color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+.bp:hover{opacity:.9}
+.shb{background:linear-gradient(135deg,#7C3AED,#4338CA);border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.shb-b{background:rgba(255,255,255,.2);border:none;border-radius:8px;padding:7px 13px;color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:12px;cursor:pointer}
+.shb-b:hover{background:rgba(255,255,255,.3)}
+.dg2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dc2{background:#fff;border-radius:13px;padding:16px;border:1px solid var(--g200)}
+.dct2{font-size:13px;font-weight:700;color:var(--g700);padding-bottom:10px;margin-bottom:10px;border-bottom:2px solid var(--g100)}
+.di2{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--g50)}.di2:last-child{border:0}
+.cc2{background:#fff;border-radius:12px;border:1px solid var(--g200);padding:14px;margin-bottom:9px;border-left:4px solid;transition:box-shadow .2s}.cc2:hover{box-shadow:var(--sh)}
+.em2{text-align:center;padding:40px;color:var(--g400);font-size:14px}
+.ntf2{position:fixed;top:18px;right:18px;z-index:99998;padding:11px 16px;border-radius:12px;font-weight:600;font-size:13px;box-shadow:var(--shl);transform:translateX(120%);transition:transform .3s}
+.ntf2.on{transform:translateX(0)}
+.ntf2.ok{background:#059669;color:#fff}.ntf2.er{background:var(--red);color:#fff}
+.ov2{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.ov2.on{display:flex}
+.modal2{background:#fff;border-radius:18px;padding:24px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:var(--shxl)}
+.mh2{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.mhh2{font-size:16px;font-weight:800;color:var(--g900)}
+.mc4{background:var(--g100);border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:13px;color:var(--g500);display:flex;align-items:center;justify-content:center}
+.fg2{display:flex;flex-direction:column;gap:4px}
+.fg2 label{font-size:11px;font-weight:600;color:var(--g700);text-transform:uppercase;letter-spacing:.4px}
+.fg2 input,.fg2 select,.fg2 textarea{padding:9px 12px;border:1.5px solid var(--g200);border-radius:9px;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;width:100%}
+.fg2 input:focus,.fg2 select:focus,.fg2 textarea:focus{border-color:#2E5594}
+.fg2 textarea{resize:vertical}
+.fr2{display:grid;gap:11px}
+.ma4{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}
+.ma4 .bp{flex:1;min-width:120px;justify-content:center}
+.rs2{margin-bottom:18px}
+.rh2{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ra2{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px}
+@media(max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}.dg2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="loginContainer">
+    <div class="loginHeader">
+      <div class="loginIcon">🏘</div>
+      <div>
+        <div class="loginTitle">HABIT'ACTION</div>
+        <div class="loginSubtitle">Plateforme partagée</div>
+      </div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <h2 style="font-size:18px;font-weight:800;margin-bottom:20px;color:var(--navy)">Connexion</h2>
+      <div class="errorMsg" id="loginError"></div>
+      <div class="formGroup">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="vous@example.com">
+      </div>
+      <div class="formGroup">
+        <label>Mot de passe</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="loginBtn" onclick="handleLogin()">Se connecter</button>
+      <div class="toggleForm">
+        Pas de compte ? <button onclick="showSignup()">S'inscrire</button>
+      </div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signupForm">
+      <h2 style="font-size:18px;font-weight:800;margin-bottom:20px;color:var(--navy)">Création de compte</h2>
+      <div class="successMsg" id="signupSuccess"></div>
+      <div class="errorMsg" id="signupError"></div>
+      <div class="formGroup">
+        <label>Nom complet</label>
+        <input type="text" id="signupName" placeholder="Mohammed EL YAKOUBI">
+      </div>
+      <div class="formGroup">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="mohammed@habitaction.com">
+      </div>
+      <div class="formGroup">
+        <label>Mot de passe</label>
+        <input type="password" id="signupPassword" placeholder="••••••••">
+      </div>
+      <div class="formGroup">
+        <label>Confirmer le mot de passe</label>
+        <input type="password" id="signupPasswordConfirm" placeholder="••••••••">
+      </div>
+      <button class="loginBtn" onclick="handleSignup()">Créer un compte</button>
+      <div class="toggleForm">
+        Déjà un compte ? <button onclick="showLogin()">Se connecter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading">
+  <div style="font-size:36px">🏘</div>
+  <div class="spin"></div>
+  <div style="color:#fff;font-size:16px;font-weight:700">HABIT'ACTION</div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen">
+  <header>
+    <div class="hi">
+      <div class="logo">
+        <div class="li2">🏘</div>
+        <div><div style="color:#fff;font-size:17px;font-weight:800">HABIT'ACTION</div><div style="color:rgba(255,255,255,.6);font-size:10px;letter-spacing:1.5px;text-transform:uppercase">Plateforme Partagée</div></div>
+      </div>
+      <div class="userInfo">
+        <div><div class="userName" id="currentUserName">Utilisateur</div><div style="color:rgba(255,255,255,.6);font-size:10px">Connecté</div></div>
+        <button class="logoutBtn" onclick="handleLogout()">Déconnexion</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tb on" onclick="showTab('dash',this)">🏠 Dashboard</button>
+      <button class="tb" onclick="showTab('dos',this)">📋 Dossiers</button>
+      <button class="tb" onclick="showTab('tac',this)">✅ Tâches</button>
+      <button class="tb" onclick="showTab('mem',this)">👥 Membres</button>
+    </div>
+  </header>
+
+  <main id="main2">
+    <div id="page-dash" class="page on" style="background:#fff;border-radius:14px;padding:20px"></div>
+    <div id="page-dos" class="page" style="display:none"></div>
+    <div id="page-tac" class="page" style="display:none"></div>
+    <div id="page-mem" class="page" style="display:none"></div>
+  </main>
+</div>
+
+<div class="ntf2" id="ntf2"></div>
+
+<script>
+const TODAY2=new Date().toISOString().split('T')[0];
+let currentUser=null;
+let users={};
+let DATA2={dossiers:[],taches:[],membres:[],comms:[]};
+
+// INIT
+function init(){
+  loadUsers();
+  const saved=localStorage.getItem('habitaction_user');
+  if(saved){
+    try{
+      const user=JSON.parse(saved);
+      loginUser(user);
+    }catch(e){
+      showLoginScreen();
+    }
+  }else{
+    showLoginScreen();
+  }
+}
+
+function loadUsers(){
+  const saved=localStorage.getItem('habitaction_users');
+  if(saved)users=JSON.parse(saved);
+}
+
+function saveUsers(){
+  localStorage.setItem('habitaction_users',JSON.stringify(users));
+}
+
+function showLoginScreen(){
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('appScreen').classList.remove('visible');
+}
+
+function showAppScreen(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.add('visible');
+  renderDashboard();
+}
+
+// LOGIN/SIGNUP
+function showLogin(){
+  document.getElementById('signupForm').style.display='none';
+  document.getElementById('loginForm').style.display='block';
+  clearErrors();
+}
+
+function showSignup(){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('signupForm').style.display='block';
+  clearErrors();
+}
+
+function clearErrors(){
+  document.getElementById('loginError').classList.remove('show');
+  document.getElementById('signupError').classList.remove('show');
+  document.getElementById('signupSuccess').classList.remove('show');
+}
+
+function handleLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const err=document.getElementById('loginError');
+  
+  if(!email||!password){
+    err.textContent='Entrez email et mot de passe';
+    err.classList.add('show');
+    return;
+  }
+  
+  if(!users[email]||users[email].password!==password){
+    err.textContent='Email ou mot de passe incorrect';
+    err.classList.add('show');
+    return;
+  }
+  
+  loginUser({email,name:users[email].name});
+}
+
+function handleSignup(){
+  const name=document.getElementById('signupName').value.trim();
+  const email=document.getElementById('signupEmail').value.trim();
+  const pwd=document.getElementById('signupPassword').value;
+  const pwdConfirm=document.getElementById('signupPasswordConfirm').value;
+  const err=document.getElementById('signupError');
+  const suc=document.getElementById('signupSuccess');
+  
+  clearErrors();
+  
+  if(!name||!email||!pwd){
+    err.textContent='Remplissez tous les champs';
+    err.classList.add('show');
+    return;
+  }
+  
+  if(pwd!==pwdConfirm){
+    err.textContent='Les mots de passe ne correspondent pas';
+    err.classList.add('show');
+    return;
+  }
+  
+  if(pwd.length<6){
+    err.textContent='Le mot de passe doit faire au moins 6 caractères';
+    err.classList.add('show');
+    return;
+  }
+  
+  if(users[email]){
+    err.textContent='Cet email existe déjà';
+    err.classList.add('show');
+    return;
+  }
+  
+  users[email]={name,password:pwd};
+  saveUsers();
+  
+  suc.textContent='✓ Compte créé ! Connectez-vous maintenant.';
+  suc.classList.add('show');
+  
+  setTimeout(()=>{
+    showLogin();
+    document.getElementById('loginEmail').value=email;
+  },1500);
+}
+
+function loginUser(user){
+  currentUser=user;
+  localStorage.setItem('habitaction_user',JSON.stringify(user));
+  document.getElementById('currentUserName').textContent=user.name;
+  showAppScreen();
+  initApp();
+}
+
+function handleLogout(){
+  if(!confirm('Vous êtes sûr de vouloir vous déconnecter ?'))return;
+  currentUser=null;
+  localStorage.removeItem('habitaction_user');
+  showLoginScreen();
+}
+
+// APP
+function initApp(){
+  loadAppData();
+  render2();
+}
+
+function loadAppData(){
+  const saved=localStorage.getItem('habitaction_data_'+currentUser.email);
+  if(saved){
+    try{
+      DATA2=JSON.parse(saved);
+    }catch(e){
+      DATA2={dossiers:[],taches:[],membres:[],comms:[]};
+    }
+  }
+}
+
+function saveAppData(){
+  localStorage.setItem('habitaction_data_'+currentUser.email,JSON.stringify(DATA2));
+}
+
+function showTab(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('page-'+id).style.display='block';
+  btn.classList.add('on');
+  render2();
+}
+
+// RENDER
+function render2(){
+  renderDashboard();
+  renderDossiers();
+  renderTaches();
+  renderMembres();
+}
+
+function renderDashboard(){
+  const st={
+    actifs:DATA2.dossiers.filter(x=>['En cours','À traiter'].includes(x.statut)).length,
+    resolus:DATA2.dossiers.filter(x=>x.statut==='Résolu').length,
+    tachesFaites:DATA2.taches.filter(x=>x.statut==='Réalisé').length,
+    membres:DATA2.membres.length,
+  };
+  
+  document.getElementById('page-dash').innerHTML=`
+    <div style="margin-bottom:20px">
+      <h1 style="font-size:24px;font-weight:800;margin-bottom:8px">Bienvenue, ${currentUser.name} 👋</h1>
+      <p style="color:var(--g500)">Suivi en temps réel de l'équipe Habit'Action</p>
+    </div>
+    <div class="kpis">
+      <div class="kpi" style="background:#FEF3C7"><div style="font-size:20px">📂</div><div class="kpi-n" style="color:#D97706">${st.actifs}</div><div class="kpi-l" style="color:#D97706">Dossiers actifs</div></div>
+      <div class="kpi" style="background:#D1FAE5"><div style="font-size:20px">✅</div><div class="kpi-n" style="color:#059669">${st.resolus}</div><div class="kpi-l" style="color:#059669">Résolus</div></div>
+      <div class="kpi" style="background:#EDE9FE"><div style="font-size:20px">🎯</div><div class="kpi-n" style="color:#7C3AED">${DATA2.taches.length}</div><div class="kpi-l" style="color:#7C3AED">Tâches</div></div>
+      <div class="kpi" style="background:#EAF0F8"><div style="font-size:20px">👥</div><div class="kpi-n" style="color:#2E5594">${st.membres}</div><div class="kpi-l" style="color:#2E5594">Membres</div></div>
+    </div>
+    <div class="dg2">
+      <div class="dc2"><div class="dct2">📋 Dossiers récents</div>${DATA2.dossiers.slice(-3).reverse().map(x=>`<div class="di2"><div><div style="font-size:13px;font-weight:600">${x.nom}</div><div class="ts">${x.quartier}</div></div><span style="background:#FEF3C7;color:#D97706;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600">${x.statut}</span></div>`).join('')||'<div class="em2">Aucun dossier</div>'}</div>
+      <div class="dc2"><div class="dct2">✅ Tâches en cours</div>${DATA2.taches.filter(t=>t.statut!=='Réalisé').slice(0,3).map(t=>`<div class="di2"><div style="font-size:13px;font-weight:600">${t.titre}</div><div class="ts">${t.responsable}</div></div>`).join('')||'<div class="em2">Aucune tâche</div>'}</div>
+    </div>
+  `;
+}
+
+function renderDossiers(){
+  document.getElementById('page-dos').innerHTML=`
+    <div class="ph"><div><div class="pt">Dossiers habitants</div><div class="ps2">${DATA2.dossiers.length} dossiers</div></div><button class="bp" onclick="addDossier()">＋ Nouveau dossier</button></div>
+    <div class="tw"><table><thead><tr><th>Nom</th><th>Quartier</th><th>Problème</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>${DATA2.dossiers.length?DATA2.dossiers.map(d=>`<tr>
+      <td><div class="tn">${d.nom}</div><div class="ts">${d.adresse}</div></td>
+      <td>${d.quartier}</td>
+      <td>${d.probleme}</td>
+      <td><span style="background:#FEF3C7;color:#D97706;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600">${d.statut}</span></td>
+      <td><div class="ab"><button class="e2" onclick='editDossier(${d.id})'>✏ Modifier</button><button class="d2" onclick='deleteDossier(${d.id})'>🗑 Supprimer</button></div></td>
+    </tr>`).join(''):'<tr><td colspan="5" class="em2">Aucun dossier. Créez-en un !</td></tr>'}</tbody></table></div>
+  `;
+}
+
+function addDossier(){
+  const nom=prompt('Nom de la personne :');
+  if(!nom)return;
+  const quartier=prompt('Quartier : (Wazemmes, Moulins, etc)');
+  if(!quartier)return;
+  const probleme=prompt('Problème principal :');
+  if(!probleme)return;
+  
+  DATA2.dossiers.push({
+    id:Date.now(),
+    nom,quartier,probleme,
+    adresse:'',
+    type:'Logement',
+    statut:'À traiter',
+    priorite:'Normale',
+    responsable:currentUser.name,
+    dateContact:TODAY2,
+    dateRelance:'',
+    transmisA:'',
+    note:''
+  });
+  saveAppData();
+  renderDossiers();
+  ntfy2('✓ Dossier créé !');
+}
+
+function editDossier(id){
+  const d=DATA2.dossiers.find(x=>x.id===id);
+  if(!d)return;
+  const nom=prompt('Nom :',d.nom);
+  if(nom){
+    d.nom=nom;
+    const statut=prompt('Statut : (À traiter, En cours, Résolu)',d.statut);
+    if(statut)d.statut=statut;
+    saveAppData();
+    renderDossiers();
+    ntfy2('✓ Dossier modifié !');
+  }
+}
+
+function deleteDossier(id){
+  if(!confirm('Supprimer ce dossier ?'))return;
+  DATA2.dossiers=DATA2.dossiers.filter(x=>x.id!==id);
+  saveAppData();
+  renderDossiers();
+  ntfy2('✓ Dossier supprimé');
+}
+
+function renderTaches(){
+  document.getElementById('page-tac').innerHTML=`
+    <div class="ph"><div><div class="pt">Tâches</div><div class="ps2">${DATA2.taches.length} tâches</div></div><button class="bp" onclick="addTache()">＋ Nouvelle tâche</button></div>
+    <div class="tw"><table><thead><tr><th>Titre</th><th>Responsable</th><th>Statut</th><th>Échéance</th><th>Actions</th></tr></thead>
+    <tbody>${DATA2.taches.length?DATA2.taches.map(t=>`<tr>
+      <td><div class="tn">${t.titre}</div></td>
+      <td>${t.responsable}</td>
+      <td><span style="background:${t.statut==='Réalisé'?'#D1FAE5':'#FEF3C7'};color:${t.statut==='Réalisé'?'#059669':'#D97706'};padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600">${t.statut}</span></td>
+      <td>${t.echeance}</td>
+      <td><div class="ab"><button class="e2" onclick='editTache(${t.id})'>✏ Modifier</button><button class="d2" onclick='deleteTache(${t.id})'>🗑 Supprimer</button></div></td>
+    </tr>`).join(''):'<tr><td colspan="5" class="em2">Aucune tâche</td></tr>'}</tbody></table></div>
+  `;
+}
+
+function addTache(){
+  const titre=prompt('Titre de la tâche :');
+  if(!titre)return;
+  DATA2.taches.push({
+    id:Date.now(),
+    titre,
+    responsable:currentUser.name,
+    statut:'À faire',
+    priorite:'Normale',
+    echeance:'',
+    categorie:''
+  });
+  saveAppData();
+  renderTaches();
+  ntfy2('✓ Tâche créée !');
+}
+
+function editTache(id){
+  const t=DATA2.taches.find(x=>x.id===id);
+  if(!t)return;
+  const statut=prompt('Statut : (À faire, En cours, Réalisé)',t.statut);
+  if(statut){
+    t.statut=statut;
+    saveAppData();
+    renderTaches();
+    ntfy2('✓ Tâche modifiée !');
+  }
+}
+
+function deleteTache(id){
+  if(!confirm('Supprimer cette tâche ?'))return;
+  DATA2.taches=DATA2.taches.filter(x=>x.id!==id);
+  saveAppData();
+  renderTaches();
+  ntfy2('✓ Tâche supprimée');
+}
+
+function renderMembres(){
+  document.getElementById('page-mem').innerHTML=`
+    <div class="ph"><div><div class="pt">Membres de l'équipe</div><div class="ps2">${DATA2.membres.length} membres</div></div><button class="bp" onclick="addMembre()">＋ Ajouter un membre</button></div>
+    <div class="tw"><table><thead><tr><th>Nom</th><th>Rôle</th><th>Email</th><th>Actions</th></tr></thead>
+    <tbody>${DATA2.membres.length?DATA2.membres.map(m=>`<tr>
+      <td><div class="tn">${m.nom}</div></td>
+      <td>${m.role}</td>
+      <td style="font-size:12px;color:var(--g400)">${m.email}</td>
+      <td><div class="ab"><button class="d2" onclick='deleteMembre(${m.id})'>🗑 Supprimer</button></div></td>
+    </tr>`).join(''):'<tr><td colspan="4" class="em2">Aucun membre</td></tr>'}</tbody></table></div>
+  `;
+}
+
+function addMembre(){
+  const nom=prompt('Nom complet :');
+  if(!nom)return;
+  const role=prompt('Rôle : (Bureau, Bénévole, etc)');
+  if(!role)return;
+  const email=prompt('Email :');
+  if(!email)return;
+  
+  DATA2.membres.push({
+    id:Date.now(),
+    nom,role,email,
+    telephone:'',
+    quartier:'',
+    dateAdhesion:TODAY2,
+    statut:'Actif'
+  });
+  saveAppData();
+  renderMembres();
+  ntfy2('✓ Membre ajouté !');
+}
+
+function deleteMembre(id){
+  if(!confirm('Supprimer ce membre ?'))return;
+  DATA2.membres=DATA2.membres.filter(x=>x.id!==id);
+  saveAppData();
+  renderMembres();
+  ntfy2('✓ Membre supprimé');
+}
+
+function ntfy2(msg){
+  const e=document.getElementById('ntf2');
+  e.textContent=msg;
+  e.className='ntf2 ok on';
+  setTimeout(()=>e.classList.remove('on'),3000);
+}
+
+window.onload=init;
+</script>
+</body>
+</html>
